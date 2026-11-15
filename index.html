@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14121f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>مجهول</title>
+<style>
+:root{--bg:#14121f;--card:#201d31;--fg:#f2effa;--mut:#9a95b3;--acc:#ff7a59;--me:#3b2f6b}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font:16px/1.5 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--fg);overflow:hidden}
+.scr{display:none;flex-direction:column;height:100%;padding:calc(16px + env(safe-area-inset-top)) 16px 84px;gap:12px;overflow:auto}
+.scr.on{display:flex}
+input,select,textarea{width:100%;background:var(--card);color:var(--fg);border:1px solid #302b47;border-radius:12px;padding:12px;font:inherit}
+textarea{min-height:90px;resize:vertical}
+button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--acc);color:#1a1020;font-weight:600}
+button.g{background:var(--card);color:var(--fg);font-weight:400}
+h1{font-size:28px}
+.mut{color:var(--mut)}
+#auth{justify-content:center}
+#home{align-items:center;justify-content:center;text-align:center}
+#find{width:190px;height:190px;border-radius:50%;font-size:22px;box-shadow:0 0 0 14px #ff7a5922,0 0 0 30px #ff7a5911}
+#nav{display:none;position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);padding-bottom:env(safe-area-inset-bottom)}
+#nav button{flex:1;background:none;color:var(--fg);border-radius:0;padding:16px}
+#ph{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ph{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--card);padding:0;font-size:28px;color:var(--mut)}
+.ph img{width:100%;height:100%;object-fit:cover}
+.x{position:absolute;top:4px;left:4px;padding:0 9px;background:#000a;color:#fff;border-radius:50%}
+#chat{padding:0}
+.hd{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--card)}
+.hd .t{flex:1;cursor:pointer;display:flex;align-items:center;gap:10px}
+.hd img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.hd button{padding:8px 12px}
+#msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.b{max-width:78%;padding:8px 12px;border-radius:16px;word-break:break-word}
+.b.me{align-self:flex-start;background:var(--me)}
+.b.th{align-self:flex-end;background:var(--card)}
+.b img,.b video{max-width:100%;border-radius:10px;display:block}
+.b audio{max-width:100%}
+.sys{text-align:center;color:var(--mut);font-size:14px;padding:8px}
+.comp{display:flex;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:var(--card)}
+.comp.off{opacity:.4;pointer-events:none}
+.comp button{padding:10px 12px}
+.comp input{border-radius:20px}
+#mic.rc{background:#e5484d;color:#fff}
+#ov{position:fixed;inset:0;background:#000e;display:none;align-items:center;justify-content:center;padding:24px;z-index:9}
+#ov.on{display:flex}
+#ov img,#ov video{max-width:100%;max-height:100%;border-radius:8px}
+.card{background:var(--card);border-radius:16px;padding:16px;max-height:100%;overflow:auto;width:100%}
+.card img{width:100%;border-radius:12px;margin-bottom:8px}
+#toast{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:20px;display:none;z-index:10;max-width:90%}
+#toast.on{display:block}
+</style>
+</head>
+<body>
+<main id="auth" class="scr on">
+  <h1>مجهول</h1>
+  <p class="mut">دردشة عشوائية مع أشخاص جدد. للبالغين فقط (18+).</p>
+  <input id="em" type="email" placeholder="البريد الإلكتروني" autocomplete="email">
+  <input id="pw" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" autocomplete="current-password">
+  <button id="login">دخول</button>
+  <button id="signup" class="g">إنشاء حساب</button>
+  <button id="google" class="g">المتابعة عبر Google</button>
+</main>
+
+<main id="home" class="scr">
+  <button id="find">ابدأ المحادثة</button>
+  <button id="cancel" class="g" style="display:none">إلغاء البحث</button>
+  <p id="st" class="mut">اضغط للتعرف على شخص عشوائي</p>
+</main>
+
+<main id="profile" class="scr">
+  <h1>ملفي</h1>
+  <div id="ph"></div>
+  <input id="pf" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+  <input id="name" placeholder="الاسم المستعار" maxlength="30">
+  <input id="age" type="number" inputmode="numeric" placeholder="العمر" min="18" max="99">
+  <select id="gender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option><option value="غير محدد">غير محدد</option></select>
+  <textarea id="bio" placeholder="نبذة عنك" maxlength="300"></textarea>
+  <button id="save">حفظ الملف</button>
+  <button id="logout" class="g">تسجيل الخروج</button>
+</main>
+
+<section id="chat" class="scr">
+  <div class="hd">
+    <button id="bk" class="g">‹</button>
+    <div class="t" id="hd"><img id="pa" alt=""><b id="pn"></b></div>
+    <button id="rp" class="g">تبليغ</button>
+    <button id="nx">التالي</button>
+  </div>
+  <div id="msgs"></div>
+  <div class="comp" id="comp">
+    <button class="g" onclick="fi.click()">🖼</button>
+    <button class="g" onclick="fv.click()">🎬</button>
+    <button class="g" id="mic">🎤</button>
+    <input id="tx" placeholder="اكتب رسالة" autocomplete="off">
+    <button id="snd">إرسال</button>
+  </div>
+  <input id="fi" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+  <input id="fv" type="file" accept="video/mp4,video/webm,video/quicktime" hidden>
+</section>
+
+<nav id="nav"><button data-go="home">المحادثة</button><button data-go="profile">ملفي</button></nav>
+<div id="ov"></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(()=>{
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=s=>document.querySelector(s);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+let me,prof,chat,peer,chan,poll,rec,photos=[];
+
+const show=id=>{document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));$('#nav').style.display=(id==='home'||id==='profile')?'flex':'none'};
+const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2800)};
+const ov=n=>{$('#ov').replaceChildren(n);$('#ov').classList.add('on')};
+$('#ov').onclick=e=>{if(e.target.id==='ov'){$('#ov').classList.remove('on');$('#ov').replaceChildren()}};
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
+
+/* ---------- auth ---------- */
+$('#login').onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:$('#em').value,password:$('#pw').value});if(error)toast(error.message)};
+$('#signup').onclick=async()=>{const{data,error}=await sb.auth.signUp({email:$('#em').value,password:$('#pw').value});if(error)toast(error.message);else if(!data.session)toast('تحقق من بريدك لتأكيد الحساب')};
+$('#google').onclick=()=>sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+$('#logout').onclick=()=>sb.auth.signOut();
+sb.auth.onAuthStateChange((ev,s)=>{if(ev==='TOKEN_REFRESHED'||(s&&me&&me.id===s.user.id))return;setTimeout(()=>boot(s),0)});
+
+async function boot(s){
+  if(!s){me=null;show('auth');return}
+  me=s.user;
+  const{data}=await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();
+  prof=data;fillProfile();
+  if(!prof){show('profile');toast('أكمل ملفك أولاً');return}
+  const{data:c}=await sb.from('chats').select('*').eq('ended',false).maybeSingle();
+  c?openChat(c):show('home');
+}
+
+/* ---------- media helpers ---------- */
+const pub=p=>sb.storage.from('media').getPublicUrl(p).data.publicUrl;
+async function up(bucket,blob,ext){
+  const p=`${me.id}/${Date.now()}.${ext}`;
+  const{error}=await sb.storage.from(bucket).upload(p,blob,{contentType:blob.type});
+  if(error)throw error;return p;
+}
+// يصغّر الصورة ويحذف بيانات الموقع EXIF لتوفير المساحة وحماية الخصوصية
+const shrink=f=>new Promise(r=>{const i=new Image();i.onload=()=>{const k=Math.min(1,1080/Math.max(i.width,i.height));const c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(r,'image/jpeg',.8)};i.src=URL.createObjectURL(f)});
+
+/* ---------- profile ---------- */
+function fillProfile(){
+  $('#name').value=prof?.name||'';$('#age').value=prof?.age||'';
+  $('#gender').value=prof?.gender||'ذكر';$('#bio').value=prof?.bio||'';
+  photos=[...(prof?.photos||[])];renderPhotos();
+}
+function renderPhotos(){
+  const g=$('#ph');g.innerHTML='';
+  photos.forEach((u,i)=>{const d=el('div','ph'),im=el('img'),x=el('button','x','×');im.src=u;x.onclick=()=>{photos.splice(i,1);renderPhotos()};d.append(im,x);g.append(d)});
+  if(photos.length<6){const a=el('button','ph','+');a.onclick=()=>$('#pf').click();g.append(a)}
+}
+$('#pf').onchange=async e=>{
+  for(const f of e.target.files){if(photos.length>=6)break;try{photos.push(pub(await up('media',await shrink(f),'jpg')))}catch(x){toast(x.message)}}
+  e.target.value='';renderPhotos();
+};
+$('#save').onclick=async()=>{
+  const age=+$('#age').value,name=$('#name').value.trim();
+  if(!name||!(age>=18&&age<=99))return toast('الاسم مطلوب والعمر من 18 إلى 99');
+  const row={id:me.id,name,age,gender:$('#gender').value,bio:$('#bio').value,photos};
+  const{error}=await sb.from('profiles').upsert(row);
+  if(error)return toast(error.message);
+  prof=row;toast('تم حفظ الملف');show('home');
+};
+
+/* ---------- random matching ---------- */
+const stop=()=>{clearTimeout(poll);$('#find').style.display='';$('#cancel').style.display='none';$('#st').textContent='اضغط للتعرف على شخص عشوائي'};
+async function tick(){
+  const{data,error}=await sb.rpc('find_match');
+  if(error){toast(error.message);return stop()}
+  if(data){stop();const{data:c}=await sb.from('chats').select('*').eq('id',data).single();return openChat(c)}
+  poll=setTimeout(tick,3000);
+}
+$('#find').onclick=()=>{
+  if(!prof)return show('profile');
+  $('#find').style.display='none';$('#cancel').style.display='';$('#st').textContent='جارٍ البحث عن شخص...';tick();
+};
+$('#cancel').onclick=()=>{stop();sb.rpc('cancel_search')};
+
+/* ---------- chat ---------- */
+async function openChat(c){
+  chat=c;$('#msgs').innerHTML='';$('#comp').classList.remove('off');
+  const pid=c.a===me.id?c.b:c.a;
+  const{data}=await sb.from('profiles').select('*').eq('id',pid).single();
+  peer=data;$('#pn').textContent=`${peer.name} · ${peer.age}`;$('#pa').src=peer.photos[0]||'icon-192.png';
+  const{data:ms}=await sb.from('messages').select('*').eq('chat_id',c.id).order('created_at');
+  ms.forEach(add);
+  if(chan)sb.removeChannel(chan);
+  const f=`chat_id=eq.${c.id}`,m={schema:'public',table:'messages',filter:f};
+  chan=sb.channel('c'+c.id)
+    .on('postgres_changes',{event:'INSERT',...m},p=>add(p.new))
+    .on('postgres_changes',{event:'UPDATE',...m},p=>add(p.new))
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chats',filter:`id=eq.${c.id}`},p=>p.new.ended&&over())
+    .subscribe();
+  show('chat');
+}
+function mk(m){
+  const mine=m.sender===me.id,b=el('div','b '+(mine?'me':'th'));b.id='m'+m.id;
+  if(m.kind==='text')b.textContent=m.body;
+  else if(m.kind==='image'){const i=el('img');i.src=m.body;i.onclick=()=>ov(i.cloneNode());b.append(i)}
+  else if(m.kind==='voice'){const a=el('audio');a.controls=true;a.src=m.body;b.append(a)}
+  else if(m.viewed_at)b.textContent='🎬 فيديو مؤقت · تمت مشاهدته';
+  else if(mine)b.textContent='🎬 فيديو مؤقت · لم يُشاهد بعد';
+  else{const x=el('button','',' ▶ فيديو مؤقت (يُشاهد مرة واحدة)');x.onclick=()=>playTemp(m);b.append(x)}
+  return b;
+}
+function add(m){const old=document.getElementById('m'+m.id),b=mk(m);old?old.replaceWith(b):$('#msgs').append(b);b.scrollIntoView()}
+async function playTemp(m){
+  const{data,error}=await sb.storage.from('temp').createSignedUrl(m.path,120);
+  if(error)return toast('لم يعد الفيديو متاحاً');
+  await sb.rpc('mark_viewed',{mid:m.id});
+  const v=el('video');v.src=data.signedUrl;v.controls=true;v.autoplay=true;v.playsInline=true;ov(v);
+}
+async function send(kind,body,path){
+  const{data,error}=await sb.from('messages').insert({chat_id:chat.id,sender:me.id,kind,body,path}).select().single();
+  if(error)return toast(error.message);add(data);
+}
+$('#snd').onclick=()=>{const t=$('#tx').value.trim();if(!t)return;$('#tx').value='';send('text',t)};
+$('#tx').onkeydown=e=>{if(e.key==='Enter')$('#snd').click()};
+$('#fi').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{send('image',pub(await up('media',await shrink(f),'jpg')))}catch(x){toast(x.message)}
+};
+$('#fv').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(f.size>20e6)return toast('الحد الأقصى للفيديو 20MB');
+  toast('جارٍ رفع الفيديو...');
+  try{send('video',null,await up('temp',f,(f.name.split('.').pop()||'mp4').toLowerCase()))}catch(x){toast(x.message)}
+};
+$('#mic').onclick=async()=>{
+  if(rec){rec.stop();return}
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    const mt=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'audio/mp4',ch=[];
+    rec=new MediaRecorder(s,{mimeType:mt});
+    rec.ondataavailable=e=>ch.push(e.data);
+    rec.onstop=async()=>{
+      s.getTracks().forEach(t=>t.stop());rec=null;$('#mic').classList.remove('rc');
+      try{send('voice',pub(await up('media',new Blob(ch,{type:mt}),mt.split('/')[1])))}catch(x){toast(x.message)}
+    };
+    rec.start();$('#mic').classList.add('rc');
+  }catch{toast('لا يوجد إذن للميكروفون')}
+};
+$('#hd').onclick=()=>{
+  const c=el('div','card');
+  peer.photos.forEach(u=>{const i=el('img');i.src=u;c.append(i)});
+  c.append(el('h2','',`${peer.name} · ${peer.age}`),el('p','mut',peer.gender),el('p','',peer.bio||''));
+  ov(c);
+};
+function over(){$('#comp').classList.add('off');$('#msgs').append(el('div','sys','غادر الطرف الآخر المحادثة'))}
+async function leave(next){
+  await sb.rpc('leave_chat',{cid:chat.id});sb.removeChannel(chan);chan=null;chat=null;show('home');
+  if(next)$('#find').click();
+}
+$('#nx').onclick=()=>leave(true);
+$('#bk').onclick=()=>leave(false);
+$('#rp').onclick=async()=>{
+  const r=prompt('سبب التبليغ؟ (محتوى غير لائق، تحرش، ...)');if(!r)return;
+  const{error}=await sb.from('reports').insert({reporter:me.id,reported:peer.id,chat_id:chat.id,reason:r});
+  if(error)return toast(error.message);
+  toast('تم إرسال البلاغ. لن تُطابَق مع هذا الشخص مجدداً.');leave(false);
+};
+
+if(SUPABASE_URL.includes('YOUR-'))setTimeout(()=>toast('عدّل ملف config.js وضع رابط ومفتاح Supabase'),300);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
